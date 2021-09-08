@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
 	"flag"
 	"fmt"
@@ -18,7 +16,7 @@ import (
 )
 
 const (
-	extension = ".zip"
+	extension = ".dump"
 	nameLabel = "__name__"
 )
 
@@ -65,22 +63,16 @@ func main() {
 	bSlice, err := response.Marshal()
 	handleErrIfAny(err)
 
-	var compressed bytes.Buffer
-	w := gzip.NewWriter(&compressed)
-	_, err = w.Write(bSlice)
-	handleErrIfAny(err)
-
-	handleErrIfAny(w.Flush())
-
 	f, err := os.Create(conf.output)
 	handleErrIfAny(err)
 
-	numWritten, err := f.Write(compressed.Bytes())
+	numWritten, err := f.Write(bSlice)
 	handleErrIfAny(err)
+
+	handleErrIfAny(f.Close())
 
 	log.Info("msg", fmt.Sprintf("written %d bytes", numWritten))
 }
-
 
 func prepareClient(cfg *config) (*utils.Client, error) {
 	clientConf := utils.ClientConfig{
